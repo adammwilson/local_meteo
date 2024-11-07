@@ -47,30 +47,54 @@ library(tidyverse)
 # # )
 
 
-# library(GSODR)
-# nearest_stations(LAT=42.750580, LON=-78.539871,distance = 50)
-# tbar <- get_GSOD(years = 2020:2024, station = "725280-14733")
-# tbar
+dd <- read_csv("https://www.ncei.noaa.gov/access/services/data/v1?stations=US1NYER0075&dataset=daily-summaries&startDate=2000-01-01&endDate=2024-10-24&options=includeAttributes:true,includeStationLocation:1,includeStationName:1")
+
+#dd <- read_csv("https://www.ncei.noaa.gov/access/services/data/v1?stations=US1NYER0138&dataset=daily-summaries&startDate=2000-01-01&endDate=2024-10-24&options=includeAttributes:true,includeStationLocation:1,includeStationName:1")
+
+
+glimpse(dd)
+summary(dd)
+
+dd|>
+  select(where(~sum(!is.na(.x)) > 0 & is.numeric(.x))) |>
+  bind_cols(select(dd,station=STATION,date=DATE)) -> dd2
+  
+ glimpse(dd2)
+
+ ggplot(dd2,aes(x=TMAX/10,group=station,col=station))+geom_density()
+ 
+ ggplot(dd2,aes(y=TMAX/10,x=date,group=station,col=station))+geom_line()
+ 
+ggplot(dd2,aes(y=SNWD/10,x=date,group=station,col=station))+geom_line()
+ 
+ #library(GSODR)
+ #nearest_stations(LAT=42.750580, LON=-78.539871,distance = 50)
+ #tbar <- get_GSOD(years = 2020:2024, station = "US1NYER0066")
+ #tbar
 
 #install.packages("rwunderground")
 ```
 
-
-
 ```{r}
 library(openmeteo)
 
-w=weather_history(c(42.750580,-78.539871),start = "2020-09-01",end=today(),
+
+w <- weather_history(c(42.750580,-78.539871),start = "2020-09-01",end=today(),
                   daily=list("temperature_2m_max","temperature_2m_min","precipitation_sum","weather_code",
                              "shortwave_radiation_sum","et0_fao_evapotranspiration",
                              "wind_speed_10m_max","sunrise","sunset")) |>
   mutate(type="history")
 
+#h1 <- weather_forecast(c(42.750580,-78.539871),start = "2020-09-01",end=today(),
+#                                    hourly = "soil_moisture_0_to_1cm") |>
+#  mutate(type="history")
+
+
+
 f=weather_forecast(c(42.750580,-78.539871),start = today()-2,end=today()+7,
                   daily=list("temperature_2m_max","temperature_2m_min","precipitation_sum","weather_code",
                              "shortwave_radiation_sum","et0_fao_evapotranspiration",
-                             "wind_speed_10m_max","sunrise","sunset"),
-                  hourly = "soil_moisture_0_to_1cm")|>
+                             "wind_speed_10m_max","sunrise","sunset"))|>
   mutate(type="forecast")
 
 
@@ -100,7 +124,6 @@ forecast = as_list(read_xml(xml_address)) %>%
   unnest_longer(dwml) 
 
 ```
-
 
 ```{r}
 
@@ -159,7 +182,6 @@ forecast = as_list(read_xml(xml_address)) %>%
 # )
 ```
 
-
 ```{r}
 #| eval: false
 # # Snowfall totals
@@ -184,6 +206,7 @@ forecast = as_list(read_xml(xml_address)) %>%
 ```
 
 # Snowfall & Snow Depth
+
 ```{r}
 #| fig-width: 8
 #| fig-height: 13
@@ -220,7 +243,6 @@ forecast = as_list(read_xml(xml_address)) %>%
 #     sec.axis = sec_axis(~.*0.033, name="Snowfall / Depth (feet)"))
 ```
 
-
 ```{r}
 # sum_snow <- data %>% 
 #   group_by(winter) %>% 
@@ -245,7 +267,6 @@ forecast = as_list(read_xml(xml_address)) %>%
 #     geom_smooth(aes(group=1),col="red")+
 #   ylab("Cumulative Snowfall (cm)")
 ```
-
 
 # Skiable days
 
@@ -349,7 +370,6 @@ forecast = as_list(read_xml(xml_address)) %>%
 #       sec.axis = sec_axis(~.*0.39, name="Snow Depth (inches)"))
 
 ```
-
 
 # Streamflow
 
